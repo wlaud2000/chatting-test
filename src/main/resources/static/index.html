@@ -3,49 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>STOMP 채팅</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <title>WebSocket Chat Room</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        #chat {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        #messages {
+            height: 300px;
+            border: 1px solid #ddd;
+            overflow-y: scroll;
+            padding: 10px;
+        }
+        #messageInput {
+            width: 80%;
+        }
+        #sendButton {
+            width: 18%;
+        }
+    </style>
 </head>
 <body>
-<h1>STOMP 채팅</h1>
-<div>
-    <input type="text" id="message" placeholder="메시지를 입력하세요" />
-    <button onclick="sendMessage()">메시지 전송</button>
+
+<div id="chat">
+    <h2>채팅방 (room1)</h2>
+    <div id="messages"></div>
+
+    <input type="text" id="messageInput" placeholder="메시지를 입력하세요">
+    <button id="sendButton">보내기</button>
 </div>
-<div id="chat-log"></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
 <script>
-    var stompClient = null;
+    let stompClient = null;
 
+    // WebSocket 연결 설정
     function connect() {
-        var socket = new SockJS('/ws-stomp');
+        const socket = new SockJS("/ws-stomp");  // 서버의 WebSocket 엔드포인트
         stompClient = Stomp.over(socket);
 
         stompClient.connect({}, function (frame) {
-            console.log('Connected: ' + frame);
-            stompClient.subscribe('/topic/chat/roomId', function (message) {
-                showMessage(JSON.parse(message.body).message);
+            console.log("Connected: " + frame);
+
+            // 특정 채팅방 구독 (roomId: 'room1' 가정)
+            const roomId = "room1";
+            stompClient.subscribe(`/exchange/amq.topic/chat/${roomId}`, function (messageOutput) {
+                const message = JSON.parse(messageOutput.body);
+                showMessage(message.sender + ": " + message.message);
             });
         });
     }
 
-    function sendMessage() {
-        var message = document.getElementById("message").value;
-        stompClient.send("/app/chat/message", {}, JSON.stringify({
-            sender: "사용자",
-            message: message,
-            roomId: "roomId",
-            messageType: "TALK"
-        }));
-    }
-
+    // 메시지를 화면에 출력
     function showMessage(message) {
-        var chatLog = document.getElementById("chat-log");
-        chatLog.innerHTML += "<p>" + message + "</p>";
+        const messagesElement = document.getElementById("messages");
+        const messageElement = document.createElement("p");
+        messageElement.textContent = message;
+        messagesElement.appendChild(messageElement);
+        messagesElement.scrollTop = messagesElement.scrollHeight;  // 스크롤을 가장 아래로
     }
 
+    // 메시지 전송 함수
+    function sendMessage() {
+        const messageInput = document.getElementById("messageInput");
+        const message = {
+            sender: "user1",  // 예시로 sender를 설정
+            roomId: "room1",  // 채팅방 ID
+            message: messageInput.value,
+            messageType: "TALK"  // 메시지 타입 (ENTER, TALK)
+        };
+
+        // 메시지를 서버로 전송
+        stompClient.send("/app/chat/message", {}, JSON.stringify(message));
+
+        messageInput.value = "";  // 전송 후 입력 필드를 비움
+    }
+
+    // 이벤트 리스너 설정
+    document.getElementById("sendButton").addEventListener("click", sendMessage);
+    document.getElementById("messageInput").addEventListener("keypress", function (e) {
+        if (e.key === 'Enter') {  // Enter 키로 메시지 전송
+            sendMessage();
+        }
+    });
+
+    // WebSocket 연결 시작
     connect();
 </script>
+
 </body>
 </html>

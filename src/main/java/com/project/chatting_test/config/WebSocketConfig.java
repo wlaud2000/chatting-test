@@ -14,7 +14,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Value("${spring.rabbitmq.host}")
     private String relayHost;
 
-    @Value("${spring.rabbitmq.port}")
+    @Value("${spring.messaging.stomp.broker.relay.relay-port}")
     private int relayPort;
 
     @Override
