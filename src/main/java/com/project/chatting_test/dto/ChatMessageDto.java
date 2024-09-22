@@ -10,6 +10,9 @@ public record ChatMessageDto(
         String message            // 메시지 내용
 ) {
 
+    public void setMessage(String messgae) {
+    }
+
     public enum MessageType {
         ENTER, TALK
     }
