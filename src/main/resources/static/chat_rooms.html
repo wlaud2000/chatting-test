@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Rooms</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        #roomList {
+            margin: 20px auto;
+            max-width: 400px;
+            text-align: left;
+        }
+        #roomList div {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+        #roomNameInput {
+            width: 70%;
+            padding: 10px;
+            margin-right: 10px;
+        }
+        #createRoomButton {
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<h2>채팅방 목록</h2>
+<div id="roomList"></div>
+
+<h3>새 채팅방 만들기</h3>
+<input type="text" id="roomNameInput" placeholder="채팅방 이름 입력">
+<button id="createRoomButton">채팅방 생성</button>
+
+<script>
+    // 채팅방 목록 불러오기
+    function loadChatRooms() {
+        fetch("/chat/rooms")
+            .then(response => response.json())
+            .then(rooms => {
+                const roomList = document.getElementById("roomList");
+                roomList.innerHTML = "";  // 기존 목록 초기화
+                rooms.forEach(room => {
+                    const roomElement = document.createElement("div");
+                    roomElement.textContent = room.name;
+                    roomElement.addEventListener("click", () => enterRoom(room.roomId));
+                    roomList.appendChild(roomElement);
+                });
+            });
+    }
+
+    // 채팅방 생성 요청
+    document.getElementById("createRoomButton").addEventListener("click", () => {
+        const roomName = document.getElementById("roomNameInput").value;
+        if (roomName) {
+            fetch(`/chat/room?name=${roomName}`, { method: "POST" })
+                .then(() => {
+                    document.getElementById("roomNameInput").value = "";  // 입력 필드 초기화
+                    loadChatRooms();  // 채팅방 목록 갱신
+                });
+        }
+    });
+
+    // 특정 채팅방으로 이동
+    function enterRoom(roomId) {
+        window.location.href = `/chat_room.html?roomId=${roomId}`;  // 채팅방 입장
+    }
+
+    // 페이지 로딩 시 채팅방 목록 불러오기
+    loadChatRooms();
+</script>
+
+</body>
+</html>
