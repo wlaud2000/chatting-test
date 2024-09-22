@@ -17,26 +17,18 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Value("${spring.rabbitmq.port}")
     private int relayPort;
 
-    @Value("${spring.rabbitmq.username}")
-    private String clientLogin;
-
-    @Value("${spring.rabbitmq.password}")
-    private String clientPasscode;
-
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
-        config.enableStompBrokerRelay("/topic", "/queue")  // RabbitMQ를 브로커로 사용
+        config.enableStompBrokerRelay("/topic", "/queue")
                 .setRelayHost(relayHost)
-                .setRelayPort(relayPort)
-                .setClientLogin(clientLogin)
-                .setClientPasscode(clientPasscode);
-        config.setApplicationDestinationPrefixes("/app");  // 클라이언트가 메시지를 보낼 때 경로
+                .setRelayPort(relayPort);
+        config.setApplicationDestinationPrefixes("/app");
     }
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws-stomp")
-                .setAllowedOrigins("*") // 실제 운영 환경에서는 특정 도메인만 허용
-                .withSockJS();  // STOMP 엔드포인트 등록
+                .setAllowedOriginPatterns("*")
+                .withSockJS();  // SockJS fallback 사용
     }
 }

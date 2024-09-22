@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STOMP 채팅</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+</head>
+<body>
+<h1>STOMP 채팅</h1>
+<div>
+    <input type="text" id="message" placeholder="메시지를 입력하세요" />
+    <button onclick="sendMessage()">메시지 전송</button>
+</div>
+<div id="chat-log"></div>
+
+<script>
+    var stompClient = null;
+
+    function connect() {
+        var socket = new SockJS('/ws-stomp');
+        stompClient = Stomp.over(socket);
+
+        stompClient.connect({}, function (frame) {
+            console.log('Connected: ' + frame);
+            stompClient.subscribe('/topic/chat/roomId', function (message) {
+                showMessage(JSON.parse(message.body).message);
+            });
+        });
+    }
+
+    function sendMessage() {
+        var message = document.getElementById("message").value;
+        stompClient.send("/app/chat/message", {}, JSON.stringify({
+            sender: "사용자",
+            message: message,
+            roomId: "roomId",
+            messageType: "TALK"
+        }));
+    }
+
+    function showMessage(message) {
+        var chatLog = document.getElementById("chat-log");
+        chatLog.innerHTML += "<p>" + message + "</p>";
+    }
+
+    connect();
+</script>
+</body>
+</html>

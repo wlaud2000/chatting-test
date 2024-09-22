@@ -9,11 +9,12 @@ public record ChatMessageDto(
         String sender,            // 보낸 사람
         String message            // 메시지 내용
 ) {
-
-    public void setMessage(String messgae) {
-    }
-
     public enum MessageType {
         ENTER, TALK
+    }
+
+    // 새로운 메시지를 반환하는 메서드
+    public ChatMessageDto withMessage(String newMessage) {
+        return new ChatMessageDto(this.messageType, this.roomId, this.sender, newMessage);
     }
 }
